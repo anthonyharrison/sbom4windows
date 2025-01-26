@@ -100,9 +100,14 @@ class ExtractFile:
                 stdout, stderr, _ = self.run_command(["7z", "l", filename])
                 if stdout is None:
                     return None
+        elif sys.platform == "win32":
+            # TODO shouldn't use hardcoded path name
+            stdout, stderr, _ = self.run_command(["c:\\program files\7zip\7z", "l", filename])
+            if stdout is None:
+                return None
         else:
             self.log_info(f"No extraction tool found for {filename}")
-            self.log_info("Unable to extract msi files")
+            self.log_info("Unable to extract dll file")
             return None
         # Return list of files in installer
         return stdout.splitlines()
