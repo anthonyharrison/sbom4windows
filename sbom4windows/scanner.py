@@ -29,7 +29,7 @@ class SBOMScanner:
         self.extract.extract_file_cab(item, self.temp_cab_dir)
         # Now process extracted files
         for cab_item in Path(self.temp_cab_dir).glob("**/*"):
-            if str(cab_item).endswith(".dll"):
+            if str(cab_item.lower()).endswith(".dll"):
                 # Process DLL
                 if file == "":
                     if self.debug:
@@ -39,7 +39,7 @@ class SBOMScanner:
                     if self.debug:
                         print(f"[CAB1] Process DLL {cab_item} within {file}")
                     self._process_dllfile(item, file, cab_item)
-            elif str(cab_item).endswith(".cab"):
+            elif str(cab_item.lower()).endswith(".cab"):
                 print(f"[CAB1] Need to process {str(cab_item)}")
             elif self.debug:
                 print(f"[CAB1] Not processing {str(cab_item)}")
@@ -53,6 +53,8 @@ class SBOMScanner:
         else:
             info = self.extract.extract_file_dll(item)
         # print (info)
+        if info is None:
+            return
         if len(info) > 0:
             component_details = self.extract.process_dll(info)
             # print (component_details)
@@ -71,13 +73,13 @@ class SBOMScanner:
             return -1
         for item in file_dir.glob("**/*"):
             # print (item)
-            if str(item).endswith(".msi"):
+            if str(item.lower()).endswith(".msi"):
                 files = self.extract.extract_file_msi(item, self.temp_msi_dir)
                 if files is not None:
                     # Now process files
                     for file in Path(self.temp_msi_dir).glob("**/*"):
                         # print (f"Process {file}")
-                        if str(file).endswith(".cab"):
+                        if str(file.lower()).endswith(".cab"):
                             # self._process_cabfile(file, item)
                             if self.debug:
                                 print(f"Process {file}")
@@ -86,10 +88,10 @@ class SBOMScanner:
                             self.extract.extract_file_cab(file, self.temp_cab_dir)
                             # Now process extracted files
                             for cab_item in Path(self.temp_cab_dir).glob("**/*"):
-                                if str(cab_item).endswith(".dll"):
+                                if str(cab_item.lower()).endswith(".dll"):
                                     # Process DLL
                                     self._process_dllfile(item, file, cab_item)
-                                elif str(cab_item).endswith(".cab"):
+                                elif str(cab_item.lower()).endswith(".cab"):
                                     if self.debug:
                                         print(f"[CAB] Need to process {str(cab_item)}")
                                 elif self.debug:
@@ -98,10 +100,10 @@ class SBOMScanner:
                         elif self.debug:
                             print(f"[MSI] Not processing {file}")
                     shutil.rmtree(self.temp_msi_dir, ignore_errors=True)
-            elif str(item).endswith(".cab"):
+            elif str(item.lower()).endswith(".cab"):
                 # print (f"Process {file}")
                 self._process_cabfile(item)
-            elif str(item).endswith(".dll"):
+            elif str(item.lower()).endswith(".dll"):
                 # Process DLL
                 self._process_dllfile(item)
             elif self.debug:
@@ -112,7 +114,8 @@ class SBOMScanner:
     def process_system(self):
         # System directory
         if sys.platform == "win32":
-            self.process_directory("c:\\windows\\system32")
+            self.directory = "c:\\windows\\system32"
+            self.process_directory()
 
     def _build(self):
         self.sbom_relationship = SBOMRelationship()
