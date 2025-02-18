@@ -3,6 +3,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from sbom4windows.peutils import PEUtils
+
 
 class ExtractFile:
 
@@ -150,3 +152,34 @@ class ExtractFile:
                     " "
                 )[0]
         return component
+
+    def process_pefile(self, filename):
+        # Get PE file info
+        pe_utils = PEUtils(filename)
+        pe_utils.get_version_info()
+        pe_utils.get_dll_info()
+
+        component = {}
+        # File info
+        pefile_file_data = pe_utils.get_file_data()
+        for k, v in pefile_file_data.items():
+            component[k] = v
+        # Version Info
+        comments = [
+            "ProductVersion",
+            "CompanyName",
+            "FileDescription",
+            "LegalCopyright",
+            "OriginalFilename",
+        ]
+        pefile_version_data = pe_utils.get_version_data()
+        for comment in comments:
+            if comment in pefile_version_data:
+                component[comment.lower()] = pefile_version_data[comment]
+        if (
+            component.get("name") is None
+            and component.get("originalfilename") is not None
+        ):
+            component["name"] = component.get("originalfilename")
+        return component, pe_utils.get_dlls()
+        # return pe_utils.get_version_data(), pe_utils.get_dll_symbols()

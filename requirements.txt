@@ -1,2 +1,3 @@
 lib4sbom >= 0.8.0
+pefile
 
