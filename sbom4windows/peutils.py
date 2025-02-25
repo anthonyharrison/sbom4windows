@@ -12,8 +12,15 @@ class PEUtils:
         self.dll_names = []
         self.file_data = {}
         self.version_info = {}
-        # Open file
-        self._open_pefile()
+        # Check file exists
+        if len(str(self.exe_path)) > 0:
+            # Check path
+            filePath = Path(self.exe_path)
+            # Check path exists, a valid file and not empty file
+            if filePath.exists() and filePath.is_file() and filePath.stat().st_size > 0:
+                # Assume that processing can proceed
+                # Open file
+                self._open_pefile()
 
     def _open_pefile(self):
         pe = pefile.PE(self.exe_path)
