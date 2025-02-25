@@ -88,16 +88,20 @@ class SBOMScanner:
             self.DLLlist.append([str(item.name), file, b, component_details])
             # os.removedirs(temp_msi_dir)
 
-    def _process_pefile(self, item, file="", b=""):
-        if self.debug:
-            print (f"[PEFILE] processing DLL {item}")
-        if b != "":
-            info, dll_list = self.extract.process_pefile(b)
+    def _process_pefile(self, item, file="", cab=""):
+        if cab != "":
+            if self.debug:
+                print(f"[PEFILE] processing DLL {cab}")
+            info, dll_list = self.extract.process_pefile(cab)
             package = b
         elif file != "":
+            if self.debug:
+                print(f"[PEFILE] processing DLL {file}")
             info, dll_list = self.extract.process_pefile(file)
             package = file
         else:
+            if self.debug:
+                print(f"[PEFILE] processing DLL {item}")
             info, dll_list = self.extract.process_pefile(item)
             package = item
         if info is None:
@@ -105,9 +109,9 @@ class SBOMScanner:
         if len(info) > 0:
             if file != "":
                 file = str(file.name)
-            if b != "":
-                b = str(b.name)
-            self.DLLlist.append([str(item.name), file, b, info])
+            if cab != "":
+                cab = str(cab.name)
+            self.DLLlist.append([str(item.name), file, cab, info])
             if info.get("name") is not None and len(dll_list) > 0:
                 self.DLLdeps[(info.get("name").lower(),info.get("productversion","NOTKNOWN"))] = dll_list
 
@@ -180,12 +184,12 @@ class SBOMScanner:
         self.relationships.append(self.sbom_relationship.get_relationship())
         # Create packages
         component_ids = {}
+        include_file = False
         for d in self.DLLlist:
-            print (d)
             component = d[3]
             if "name" in component:
                 # Add self.relationships
-                if d[0] != "":
+                if include_file and d[0] != "":
                     if component_ids.get((d[0].lower(), "NOTKNOWN")) is None:
                         my_package.initialise()
                         my_package.set_type("file")
@@ -211,7 +215,7 @@ class SBOMScanner:
                     parent = application
                     parent_id = application_id
                 #
-                if d[1] != "":
+                if include_file and d[1] != "":
                     if component_ids.get((d[1].lower(), "NOTKNOWN")) is None:
                         my_package.initialise()
                         my_package.set_type("file")
@@ -258,14 +262,18 @@ class SBOMScanner:
                     my_package.set_property("created", component["created"])
                 if "filesize" in component:
                     my_package.set_property("filesize", component["filesize"])
+                if "filename" in component:
+                    my_package.set_evidence(component["filename"])
                 for checksum in ["md5", "sha1", "sha256", "sha512"]:
                     if checksum in component:
                         my_package.set_checksum(checksum.upper(), component[checksum])
-                my_package.set_evidence(d[0])
-                if d[1] != "":
-                    my_package.set_evidence(d[1])
-                if d[2] != "":
-                    my_package.set_evidence(d[2])
+                if include_file:
+                    my_package.set_evidence(d[0])
+                    if d[1] != "":
+                        my_package.set_evidence(d[1])
+                    if d[2] != "":
+                        my_package.set_evidence(d[2])
+
                 self.sbom_packages[
                     (my_package.get_name(), my_package.get_value("version"))
                 ] = my_package.get_package()
@@ -279,8 +287,6 @@ class SBOMScanner:
                 d1_id = my_package.get_value("id")
                 component_ids[(my_package.get_value("name"), my_package.get_value("version"))] = my_package.get_value("id")
                 self.relationships.append(self.sbom_relationship.get_relationship())
-        #print (component_ids)
-        print (self.sbom_packages)
         for component, deps in self.DLLdeps.items():
             print (f"{component}: {deps}")
             if component in self.sbom_packages:
@@ -288,7 +294,8 @@ class SBOMScanner:
                 for dependency in deps:
                     if (dependency.lower(),"NOTKNOWN") not in self.sbom_packages:
                         # Dependency not found
-                        print(f"Dependency {dependency} not found in SBOM packages")
+                        if self.debug:
+                            print(f"Dependency {dependency} not found in SBOM packages")
                         my_package.initialise()
                         my_package.set_name(dependency.lower())
                         my_package.set_type("library")
@@ -313,7 +320,7 @@ class SBOMScanner:
                     )
                     self.sbom_relationship.set_relationship_id(component_id, dependency_id)
                     self.relationships.append(self.sbom_relationship.get_relationship())
-            else:
+            elif self.debug:
                 print (f"Component {component} not found in SBOM packages")
 
     def set_parent(self, name):
