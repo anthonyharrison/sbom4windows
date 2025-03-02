@@ -259,7 +259,7 @@ class SBOMScanner:
                 if "cpu" in component:
                     my_package.set_property("cpu", component["cpu"])
                 if "created" in component:
-                    my_package.set_property("created", component["created"])
+                    my_package.set_value("build_date", component["created"])
                 if "filesize" in component:
                     my_package.set_property("filesize", component["filesize"])
                 if "filename" in component:
