@@ -303,16 +303,6 @@ class SBOMScanner:
                         component_ids[
                             (my_package.get_name(), my_package.get_value("version"))
                         ] = my_package.get_value("id")
-                        self.sbom_relationship.initialise()
-                        self.sbom_relationship.set_relationship(
-                            application, "DEPENDS_ON", my_package.get_value("name")
-                        )
-                        self.sbom_relationship.set_relationship_id(
-                            application_id, my_package.get_value("id")
-                        )
-                        self.relationships.append(
-                            self.sbom_relationship.get_relationship()
-                        )
                         dependency_id = my_package.get_value("id")
                     else:
                         dependency_id = component_ids[(dependency.lower(), "NOTKNOWN")]
