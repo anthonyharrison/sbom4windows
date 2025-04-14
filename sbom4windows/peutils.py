@@ -28,22 +28,24 @@ class PEUtils:
                 self._open_pefile()
 
     def _open_pefile(self):
-        pe = pefile.PE(self.exe_path)
-        raw = pe.write()
-        self.file_data = {}
-        self.file_data["filename"] = str(self.exe_path)
-        self.file_data["filesize"] = len(raw)
-        # Get file timestamp
-        timestamp = Path(self.exe_path).stat().st_mtime
-        self.file_data["created"] = datetime.datetime.utcfromtimestamp(
-            timestamp
-        ).strftime("%Y-%m-%dT%H:%M:%SZ")
-        self.file_data["md5"] = hashlib.md5(raw).hexdigest()
-        self.file_data["sha1"] = hashlib.sha1(raw).hexdigest()
-        self.file_data["sha256"] = hashlib.sha256(raw).hexdigest()
-        self.file_data["sha512"] = hashlib.sha512(raw).hexdigest()
-        self.pe_data = pe.dump_dict()
-        pe.close()
+        try:
+            pe = pefile.PE(self.exe_path)
+            raw = pe.write()
+            self.file_data["filename"] = str(self.exe_path)
+            self.file_data["filesize"] = len(raw)
+            # Get file timestamp
+            timestamp = Path(self.exe_path).stat().st_mtime
+            self.file_data["created"] = datetime.datetime.utcfromtimestamp(
+                timestamp
+            ).strftime("%Y-%m-%dT%H:%M:%SZ")
+            self.file_data["md5"] = hashlib.md5(raw).hexdigest()
+            self.file_data["sha1"] = hashlib.sha1(raw).hexdigest()
+            self.file_data["sha256"] = hashlib.sha256(raw).hexdigest()
+            self.file_data["sha512"] = hashlib.sha512(raw).hexdigest()
+            self.pe_data = pe.dump_dict()
+            pe.close()
+        except Exception as e:
+            pass
 
     def get_version_info(self):
         if "Version Information" not in self.pe_data.keys():
