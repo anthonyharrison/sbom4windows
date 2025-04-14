@@ -69,21 +69,9 @@ class SBOMScanner:
                     if self.debug:
                         print(f"[CAB1] Process PEFILE {cab_item} within {file}")
                     self._process_pefile(item, file, cab_item)
-            # elif str(cab_item).lower().endswith(".dll"):
-            #     # Process DLL
-            #     if file == "":
-            #         if self.debug:
-            #             print(f"[CAB1] Process DLL {cab_item}")
-            #         self._process_dllfile(item, cab_item)
-            #     else:
-            #         if self.debug:
-            #             print(f"[CAB1] Process DLL {cab_item} within {file}")
-            #         self._process_dllfile(item, file, cab_item)
             elif str(cab_item).lower().endswith(".cab"):
                 if self.debug:
                     print(f"[CAB1] Need to process {str(cab_item)}")
-            # elif self.debug:
-            #     print(f"[CAB1] Not processing {str(cab_item)}")
         shutil.rmtree(self.temp_cab_dir, ignore_errors=True)
 
     def _process_dllfile(self, item, file="", b=""):
@@ -145,7 +133,6 @@ class SBOMScanner:
                     for file in Path(self.temp_msi_dir).glob("**/*"):
                         # print (f"Process {file}")
                         if str(file).lower().endswith(".cab"):
-                            # self._process_cabfile(file, item)
                             if self.debug:
                                 print(f"Process {file}")
                             Path(self.temp_cab_dir).mkdir(parents=True, exist_ok=True)
@@ -155,28 +142,18 @@ class SBOMScanner:
                             for cab_item in Path(self.temp_cab_dir).glob("**/*"):
                                 if self._is_pefile(cab_item):
                                     self._process_pefile(item, file, cab_item)
-                                # elif str(cab_item).lower().endswith(".dll"):
-                                #     # Process DLL
-                                #     self._process_dllfile(item, file, cab_item)
                                 elif str(cab_item).lower().endswith(".cab"):
                                     if self.debug:
                                         print(f"[CAB] Need to process {str(cab_item)}")
                                 elif self.debug:
                                     print(f"[CAB] Not processing {str(cab_item)}")
                             shutil.rmtree(self.temp_cab_dir, ignore_errors=True)
-                        # elif self.debug:
-                        #     print(f"[MSI] Not processing {file}")
                     shutil.rmtree(self.temp_msi_dir, ignore_errors=True)
             elif str(item).lower().endswith(".cab"):
                 # print (f"Process {file}")
                 self._process_cabfile(item)
-            # elif str(item).lower().endswith(".dll"):
-            #     # Process DLL
-            #     self._process_dllfile(item)
             elif self._is_pefile(item):
                 self._process_pefile(item)
-            # elif self.debug:
-            #     print(f"Not processing {str(item)}")
         self._build()
         return 0
 
@@ -212,6 +189,7 @@ class SBOMScanner:
                         my_package.set_name(d[0].lower())
                         my_package.set_version("NOTKNOWN")
                         my_package.set_licensedeclared("NOTKNOWN")
+                        my_package.set_evidence(d[0])
                         self.sbom_packages[
                             (my_package.get_name(), my_package.get_value("version"))
                         ] = my_package.get_package()
@@ -230,7 +208,6 @@ class SBOMScanner:
                 else:
                     parent = application
                     parent_id = application_id
-                #
                 if d[1] != "":
                     if component_ids.get((d[1].lower(), "NOTKNOWN")) is None:
                         my_package.initialise()
@@ -238,6 +215,7 @@ class SBOMScanner:
                         my_package.set_name(d[1].lower())
                         my_package.set_version("NOTKNOWN")
                         my_package.set_licensedeclared("NOTKNOWN")
+                        my_package.set_evidence(d[1])
                         self.sbom_packages[
                             (my_package.get_name(), my_package.get_value("version"))
                         ] = my_package.get_package()
