@@ -83,7 +83,8 @@ The tool uses a local copy of the [SPDX Licenses List](https://github.com/spdx/l
 The usefulness of the tool is dependent on the data which is provided to the tool. Unfortunately, the tool is unable to determine the validity or completeness of such a SBOM file; users of the tool
 are therefore reminded that they should assert the quality of any data which is provided to the tool.
 
-The tool uses information contained within .CAB, .MSI and .DLL files to create the SBOM. Other files are ignored. 
+The tool uses information contained within various files including .CAB, .MSI, .EXE and .DLL files to create the SBOM. Data files are ignored. The location of each component is included when the
+dependecy is found within the files within the directory structure which is being processed.
 
 When processing and validating licenses, the application will use a set of synonyms to attempt to map some license identifiers to the correct [SPDX License Identifiers](https://spdx.org/licenses/). However, the
 user of the tool is reminded that they should assert the quality of any data which is provided by the tool particularly where the license identifier has been modified.
