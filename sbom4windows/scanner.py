@@ -62,13 +62,15 @@ class SBOMScanner:
             #             print(f"[CAB1] Process DLL {cab_item} within {file}")
             #         self._process_dllfile(item, file, cab_item)
             elif str(cab_item).lower().endswith(".cab"):
-                print(f"[CAB1] Need to process {str(cab_item)}")
+                if self.debug:
+                    print(f"[CAB1] Need to process {str(cab_item)}")
             # elif self.debug:
             #     print(f"[CAB1] Not processing {str(cab_item)}")
         shutil.rmtree(self.temp_cab_dir, ignore_errors=True)
 
     def _process_dllfile(self, item, file="", b=""):
-        print (f"ERROR - processing DLL {item} - {self._is_pefile(item)}")
+        if self.debug:
+            print (f"Processing DLL {item} - {self._is_pefile(item)}")
         if b != "":
             info = self.extract.extract_file_dll(b)
         elif file != "":
@@ -88,20 +90,16 @@ class SBOMScanner:
             self.DLLlist.append([str(item.name), file, b, component_details])
             # os.removedirs(temp_msi_dir)
 
-    def _process_pefile(self, item, file="", cab=""):
-        if cab != "":
-            if self.debug:
-                print(f"[PEFILE] processing DLL {cab}")
-            info, dll_list = self.extract.process_pefile(cab)
+    def _process_pefile(self, item, file="", b=""):
+        if self.debug:
+            print (f"[PEFILE] processing DLL {item}")
+        if b != "":
+            info, dll_list = self.extract.process_pefile(b)
             package = b
         elif file != "":
-            if self.debug:
-                print(f"[PEFILE] processing DLL {file}")
             info, dll_list = self.extract.process_pefile(file)
             package = file
         else:
-            if self.debug:
-                print(f"[PEFILE] processing DLL {item}")
             info, dll_list = self.extract.process_pefile(item)
             package = item
         if info is None:
@@ -109,9 +107,9 @@ class SBOMScanner:
         if len(info) > 0:
             if file != "":
                 file = str(file.name)
-            if cab != "":
-                cab = str(cab.name)
-            self.DLLlist.append([str(item.name), file, cab, info])
+            if b != "":
+                b = str(b.name)
+            self.DLLlist.append([str(item.name), file, b, info])
             if info.get("name") is not None and len(dll_list) > 0:
                 self.DLLdeps[(info.get("name").lower(),info.get("productversion","NOTKNOWN"))] = dll_list
 
@@ -184,12 +182,13 @@ class SBOMScanner:
         self.relationships.append(self.sbom_relationship.get_relationship())
         # Create packages
         component_ids = {}
-        include_file = False
         for d in self.DLLlist:
+            if self.debug:
+                print (f"Processing :{d}")
             component = d[3]
             if "name" in component:
                 # Add self.relationships
-                if include_file and d[0] != "":
+                if d[0] != "":
                     if component_ids.get((d[0].lower(), "NOTKNOWN")) is None:
                         my_package.initialise()
                         my_package.set_type("file")
@@ -215,7 +214,7 @@ class SBOMScanner:
                     parent = application
                     parent_id = application_id
                 #
-                if include_file and d[1] != "":
+                if d[1] != "":
                     if component_ids.get((d[1].lower(), "NOTKNOWN")) is None:
                         my_package.initialise()
                         my_package.set_type("file")
@@ -267,13 +266,10 @@ class SBOMScanner:
                 for checksum in ["md5", "sha1", "sha256", "sha512"]:
                     if checksum in component:
                         my_package.set_checksum(checksum.upper(), component[checksum])
-                if include_file:
-                    my_package.set_evidence(d[0])
-                    if d[1] != "":
-                        my_package.set_evidence(d[1])
-                    if d[2] != "":
-                        my_package.set_evidence(d[2])
-
+                if d[1] != "":
+                    my_package.set_evidence(d[1])
+                if d[2] != "":
+                    my_package.set_evidence(d[2])
                 self.sbom_packages[
                     (my_package.get_name(), my_package.get_value("version"))
                 ] = my_package.get_package()
@@ -287,8 +283,11 @@ class SBOMScanner:
                 d1_id = my_package.get_value("id")
                 component_ids[(my_package.get_value("name"), my_package.get_value("version"))] = my_package.get_value("id")
                 self.relationships.append(self.sbom_relationship.get_relationship())
+        if self.debug:
+            print (self.sbom_packages)
         for component, deps in self.DLLdeps.items():
-            print (f"{component}: {deps}")
+            if self.debug:
+                print (f"{component}: {deps}")
             if component in self.sbom_packages:
                 component_id = component_ids[component]
                 for dependency in deps:
