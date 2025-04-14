@@ -93,30 +93,6 @@ class ExtractFile:
                     return 1
         return 0
 
-    def extract_file_dll(self, filename):
-        """Extract dll files"""
-        if sys.platform.startswith("linux"):
-            if not self.inpath("7z"):
-                # ExtractionToolNotFound
-                self.log_info(f"No extraction tool found for {filename}")
-                self.log_info("'7z' is required to extract msi files")
-                return None
-            else:
-                stdout, stderr, _ = self.run_command(["7z", "l", filename])
-                if stdout is None:
-                    return None
-        elif sys.platform == "win32":
-            # TODO shouldn't use hardcoded path name
-            stdout, stderr, _ = self.run_command(["c:\\program files\7zip\7z", "l", filename])
-            if stdout is None:
-                return None
-        else:
-            self.log_info(f"No extraction tool found for {filename}")
-            self.log_info("Unable to extract dll file")
-            return None
-        # Return list of files in installer
-        return stdout.splitlines()
-
     def process_dll(self, info):
         # Attributes to extract from 7Zip info
         attributes = ["CPU = ", "Created = ", "Name = ", "Checksum = "]
@@ -185,4 +161,3 @@ class ExtractFile:
         ):
             component["name"] = component.get("originalfilename")
         return component, pe_utils.get_dlls()
-        # return pe_utils.get_version_data(), pe_utils.get_dll_symbols()
