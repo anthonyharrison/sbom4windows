@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Anthony Harrison
+# Copyright (C) 2025 Anthony Harrison
 # SPDX-License-Identifier: Apache-2.0
 
 import argparse
