@@ -31,6 +31,7 @@ setup_kwargs = dict(
         'License :: OSI Approved :: Apache Software License',
         "Natural Language :: English",
         "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
@@ -39,7 +40,7 @@ setup_kwargs = dict(
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
     ],
-    python_requires=">=3.9",
+    python_requires=">=3.8",
     packages=find_packages(),
     entry_points={
         "console_scripts": [
